@@ -1,163 +1,533 @@
-# Drizmo Full-Stack Application
+# Drizmo - Multi-Tenant Full-Stack Application
 
-A modern full-stack application with NestJS backend, PostgreSQL database, Prisma ORM, and React + TypeScript frontend.
+A modern, production-ready full-stack application built with NestJS backend and React frontend, featuring multi-tenant architecture, role-based access control, and beautiful UI.
 
-## Features
+## 🚀 Features
 
-- ✅ User authentication (Signup & Login) with JWT
-- ✅ PostgreSQL database with Prisma ORM
-- ✅ User model with email, hashed password, and tenant_id
-- ✅ Modern, attractive UI with gradient colors
-- ✅ Login page with image section and form
-- ✅ Beautiful dashboard with modern design
+### Authentication & Authorization
 
-## Tech Stack
+- ✅ **User Authentication** - Secure signup and login with JWT tokens
+- ✅ **Role-Based Access Control** - Admin and User roles with different permissions
+- ✅ **Multi-Tenant System** - Complete tenant isolation and management
+- ✅ **Password Security** - Bcrypt hashing for secure password storage
+- ✅ **Protected Routes** - JWT-based route protection
+
+### User Management
+
+- ✅ **Admin Dashboard** - Admins can view all users in their tenant
+- ✅ **User Dashboard** - Users can only view their own data
+- ✅ **Tenant Selection** - Beautiful dropdown for tenant selection during signup
+- ✅ **User Profile** - View and manage user profiles
+
+### UI/UX
+
+- ✅ **Modern Design** - Beautiful gradient-based UI with smooth animations
+- ✅ **Responsive Layout** - Works seamlessly on all devices
+- ✅ **Interactive Forms** - Real-time validation and error handling
+- ✅ **Loading States** - Smooth loading indicators
+- ✅ **Error Handling** - User-friendly error messages
+
+## 🛠️ Tech Stack
 
 ### Backend
-- NestJS
-- PostgreSQL
-- Prisma ORM
-- JWT Authentication
-- bcrypt for password hashing
+
+- **Framework**: NestJS (Node.js)
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Authentication**: JWT (JSON Web Tokens)
+- **Password Hashing**: bcrypt
+- **Validation**: class-validator, class-transformer
+- **Language**: TypeScript
 
 ### Frontend
-- React 18
-- TypeScript
-- Vite
-- React Router
-- Axios
 
-## Setup Instructions
+- **Framework**: React 18
+- **Language**: TypeScript
+- **Build Tool**: Vite
+- **Routing**: React Router DOM
+- **HTTP Client**: Axios
+- **Styling**: CSS3 with modern animations
 
-### Prerequisites
-- Node.js (v18 or higher)
-- PostgreSQL (v14 or higher)
-- npm or yarn
+## 📋 Prerequisites
 
-### Backend Setup
+Before you begin, ensure you have the following installed:
 
-1. Navigate to backend directory:
+- **Node.js** (v18 or higher)
+- **PostgreSQL** (v14 or higher)
+- **npm** or **yarn**
+- **Git** (optional, for cloning)
+
+## 🔧 Installation & Setup
+
+### 1. Clone the Repository
+
 ```bash
-cd backend
+git clone <repository-url>
+cd drizmo-trial
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+### 2. Install Dependencies
 
-3. Create a `.env` file in the backend directory:
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/drizmo_db?schema=public"
-JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
-JWT_EXPIRES_IN="7d"
-PORT=3001
-```
+Install all dependencies for both backend and frontend:
 
-4. Update the DATABASE_URL with your PostgreSQL credentials.
-
-5. Generate Prisma Client:
-```bash
-npm run prisma:generate
-```
-
-6. Run database migrations:
-```bash
-npm run prisma:migrate
-```
-
-7. Start the backend server:
-```bash
-npm run start:dev
-```
-
-The backend will run on `http://localhost:3001`
-
-### Frontend Setup
-
-1. Navigate to frontend directory:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-The frontend will run on `http://localhost:5173`
-
-## Quick Start (All at once)
-
-From the root directory, run:
 ```bash
 npm run install:all
 ```
 
-Then start backend and frontend in separate terminals:
+Or install separately:
+
 ```bash
-# Terminal 1
+# Backend dependencies
+cd backend
+npm install
+
+# Frontend dependencies
+cd ../frontend
+npm install
+```
+
+### 3. Database Setup
+
+#### Create PostgreSQL Database
+
+```sql
+CREATE DATABASE drizmo_db;
+```
+
+#### Configure Backend Environment
+
+Create a `.env` file in the `backend` directory:
+
+```env
+DATABASE_URL="postgresql://postgres:your_password@localhost:5432/drizmo_db?schema=public"
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production-2024"
+JWT_EXPIRES_IN="7d"
+PORT=3001
+```
+
+**Important**: Replace `your_password` with your actual PostgreSQL password.
+
+#### Run Database Migrations
+
+```bash
+cd backend
+npm run prisma:generate
+npm run prisma:migrate
+```
+
+#### Seed Database (Optional)
+
+Seed the database with initial tenants:
+
+```bash
+npm run prisma:seed
+```
+
+This will create:
+
+- Tenant A
+- Tenant B
+
+**Note**: No dummy users are created. Users are created through the signup process.
+
+## 🚀 Running the Application
+
+### Development Mode
+
+#### Option 1: Run from Root (Recommended)
+
+```bash
+# Terminal 1 - Backend
 npm run dev:backend
 
-# Terminal 2
+# Terminal 2 - Frontend
 npm run dev:frontend
 ```
 
-## API Endpoints
+#### Option 2: Run Separately
 
-### Authentication
-- `POST /auth/signup` - Create a new user account
-  - Body: `{ email, password, tenantId }`
-- `POST /auth/login` - Login user
-  - Body: `{ email, password }`
-- `POST /auth/profile` - Get user profile (requires JWT token)
+**Backend:**
 
-## Database Schema
+```bash
+cd backend
+npm run start:dev
+```
 
-### User Table
-- `id` (UUID, Primary Key)
-- `email` (String, Unique)
-- `password` (String, Hashed)
-- `tenant_id` (String)
-- `created_at` (DateTime)
-- `updated_at` (DateTime)
+Backend will run on `http://localhost:3001`
 
-## Project Structure
+**Frontend:**
+
+```bash
+cd frontend
+npm run dev
+```
+
+Frontend will run on `http://localhost:5173`
+
+### Production Mode
+
+**Backend:**
+
+```bash
+cd backend
+npm run build
+npm run start:prod
+```
+
+**Frontend:**
+
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
+## 📡 API Endpoints
+
+### Authentication Endpoints
+
+#### Signup
+
+```http
+POST /auth/signup
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "tenantId": "Tenant A"
+}
+```
+
+**Response:**
+
+```json
+{
+  "access_token": "jwt_token_here",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "tenantId": "tenant-a-id",
+    "role": "user"
+  }
+}
+```
+
+#### Login
+
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response:**
+
+```json
+{
+  "access_token": "jwt_token_here",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "tenantId": "tenant-a-id",
+    "role": "user"
+  }
+}
+```
+
+#### Get Profile
+
+```http
+POST /auth/profile
+Authorization: Bearer <jwt_token>
+```
+
+### User Endpoints
+
+#### Get All Users
+
+```http
+GET /users
+Authorization: Bearer <jwt_token>
+```
+
+**Response (Admin):** Returns all users in the tenant
+**Response (User):** Returns only the current user's data
+
+#### Get User by ID
+
+```http
+GET /users/:id
+Authorization: Bearer <jwt_token>
+```
+
+#### Get Current User Profile
+
+```http
+GET /users/profile/me
+Authorization: Bearer <jwt_token>
+```
+
+### Tenant Endpoints
+
+#### Get All Tenants
+
+```http
+GET /tenants
+Authorization: Bearer <jwt_token>
+```
+
+## 🗄️ Database Schema
+
+### Tenant Model
+
+```prisma
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+}
+```
+
+### User Model
+
+```prisma
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  tenantId  String
+  role      String   @default("user") // "admin" or "user"
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+## 🔐 Role-Based Access Control
+
+### Admin Role
+
+- Can view all users in their tenant
+- Can see newly registered users automatically
+- Full access to tenant data
+
+### User Role
+
+- Can only view their own data
+- Cannot see other users' information
+- Limited access based on tenant
+
+### Tenant Isolation
+
+- Users can only access data from their own tenant
+- Complete data isolation between tenants
+- Admin "A" can only see Tenant A users
+- Admin "B" can only see Tenant B users
+
+## 📁 Project Structure
 
 ```
 drizmo-trial/
 ├── backend/
 │   ├── src/
-│   │   ├── auth/          # Authentication module
-│   │   ├── users/         # Users module
-│   │   ├── prisma/        # Prisma service
-│   │   └── main.ts        # Application entry point
+│   │   ├── auth/              # Authentication module
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── guards/        # JWT and Local auth guards
+│   │   │   ├── strategies/    # Passport strategies
+│   │   │   └── dto/          # Data transfer objects
+│   │   ├── users/            # Users module
+│   │   │   ├── users.controller.ts
+│   │   │   ├── users.service.ts
+│   │   │   └── dto/
+│   │   ├── tenants/          # Tenants module
+│   │   │   ├── tenants.controller.ts
+│   │   │   └── tenants.service.ts
+│   │   ├── prisma/           # Prisma service
+│   │   ├── common/           # Common utilities
+│   │   │   ├── decorators/   # Custom decorators
+│   │   │   ├── interceptors/ # Interceptors
+│   │   │   └── middleware/   # Middleware
+│   │   ├── app.module.ts     # Root module
+│   │   └── main.ts           # Application entry point
 │   ├── prisma/
-│   │   └── schema.prisma  # Database schema
+│   │   ├── schema.prisma     # Database schema
+│   │   ├── migrations/        # Database migrations
+│   │   └── seed.ts           # Database seed file
+│   ├── .env                  # Environment variables (create this)
+│   ├── env-template.txt       # Environment template
 │   └── package.json
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/         # React pages
-│   │   ├── context/       # Auth context
-│   │   ├── services/      # API services
-│   │   └── App.tsx        # Main app component
+│   │   ├── pages/
+│   │   │   ├── Login.tsx     # Login/Signup page
+│   │   │   └── Dashboard.tsx # User dashboard
+│   │   ├── context/
+│   │   │   └── AuthContext.tsx # Auth context provider
+│   │   ├── services/
+│   │   │   ├── authService.ts # Auth API service
+│   │   │   └── userService.ts # User API service
+│   │   ├── App.tsx           # Main app component
+│   │   └── main.tsx          # Entry point
 │   └── package.json
-└── README.md
+├── package.json              # Root package.json
+└── README.md                 # This file
 ```
 
-## Default Credentials
+## 🎨 UI Features
 
-After setup, you can create a new account through the signup page.
+### Login/Signup Page
 
-## Notes
+- Beautiful gradient background
+- Smooth form animations
+- Real-time validation
+- Custom styled tenant dropdown
+- Error and success messages
+- Responsive design
 
-- Make sure PostgreSQL is running before starting the backend
-- Update the `.env` file with your actual database credentials
-- The JWT secret should be changed in production
-- CORS is configured to allow requests from `http://localhost:5173`
+### Dashboard
 
+- Modern card-based layout
+- User statistics
+- Tenant information
+- Users list (role-based)
+- Logout functionality
+
+## 🔒 Security Features
+
+- **Password Hashing**: Bcrypt with salt rounds
+- **JWT Tokens**: Secure token-based authentication
+- **CORS Protection**: Configured for specific origins
+- **Input Validation**: Server-side validation using class-validator
+- **SQL Injection Protection**: Prisma ORM prevents SQL injection
+- **Tenant Isolation**: Complete data separation between tenants
+
+## 🧪 Testing
+
+### Backend Tests
+
+```bash
+cd backend
+npm run test
+npm run test:watch
+npm run test:cov
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+npm run test
+```
+
+## 📝 Available Scripts
+
+### Root Scripts
+
+- `npm run install:all` - Install all dependencies
+- `npm run dev:backend` - Start backend in dev mode
+- `npm run dev:frontend` - Start frontend in dev mode
+
+### Backend Scripts
+
+- `npm run start:dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start:prod` - Start production server
+- `npm run prisma:generate` - Generate Prisma Client
+- `npm run prisma:migrate` - Run database migrations
+- `npm run prisma:studio` - Open Prisma Studio
+- `npm run prisma:seed` - Seed the database
+
+### Frontend Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## 🐛 Troubleshooting
+
+### Backend Issues
+
+**Port Already in Use:**
+
+```bash
+# Change PORT in backend/.env or kill the process
+# Windows
+netstat -ano | findstr :3001
+taskkill /PID <PID> /F
+
+# Linux/Mac
+lsof -ti:3001 | xargs kill
+```
+
+**Database Connection Error:**
+
+- Ensure PostgreSQL is running
+- Check DATABASE_URL in `.env` file
+- Verify database exists: `CREATE DATABASE drizmo_db;`
+
+**Prisma Issues:**
+
+```bash
+cd backend
+npm run prisma:generate
+npm run prisma:migrate
+```
+
+### Frontend Issues
+
+**Network Error:**
+
+- Ensure backend is running on port 3001
+- Check CORS configuration
+- Verify API URL in `authService.ts` and `userService.ts`
+
+**Build Errors:**
+
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## 📚 Additional Resources
+
+- [NestJS Documentation](https://docs.nestjs.com/)
+- [React Documentation](https://react.dev/)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the ISC License.
+
+## 👤 Author
+
+Drizmo Development Team
+
+## 🙏 Acknowledgments
+
+- NestJS team for the amazing framework
+- React team for the UI library
+- Prisma team for the excellent ORM
+- All open-source contributors
+
+---
+
+**Note**: Make sure to change the JWT_SECRET in production and never commit `.env` files to version control.
