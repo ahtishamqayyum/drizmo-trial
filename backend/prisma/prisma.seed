@@ -1,0 +1,97 @@
+import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log('🌱 Starting seed...');
+
+  // Create Tenant A
+  const tenantA = await prisma.tenant.upsert({
+    where: { id: 'tenant-a-id' },
+    update: {},
+    create: {
+      id: 'tenant-a-id',
+      name: 'Tenant A',
+    },
+  });
+  console.log('✅ Created Tenant A:', tenantA);
+
+  // Create Tenant B
+  const tenantB = await prisma.tenant.upsert({
+    where: { id: 'tenant-b-id' },
+    update: {},
+    create: {
+      id: 'tenant-b-id',
+      name: 'Tenant B',
+    },
+  });
+  console.log('✅ Created Tenant B:', tenantB);
+
+  // Create test users for Tenant A
+  const hashedPasswordA = await bcrypt.hash('password123', 10);
+  const userA1 = await prisma.user.upsert({
+    where: { email: 'user1@tenanta.com' },
+    update: {},
+    create: {
+      email: 'user1@tenanta.com',
+      password: hashedPasswordA,
+      tenantId: tenantA.id,
+    },
+  });
+  console.log('✅ Created User 1 for Tenant A:', userA1.email);
+
+  const userA2 = await prisma.user.upsert({
+    where: { email: 'user2@tenanta.com' },
+    update: {},
+    create: {
+      email: 'user2@tenanta.com',
+      password: hashedPasswordA,
+      tenantId: tenantA.id,
+    },
+  });
+  console.log('✅ Created User 2 for Tenant A:', userA2.email);
+
+  // Create test users for Tenant B
+  const hashedPasswordB = await bcrypt.hash('password123', 10);
+  const userB1 = await prisma.user.upsert({
+    where: { email: 'user1@tenantb.com' },
+    update: {},
+    create: {
+      email: 'user1@tenantb.com',
+      password: hashedPasswordB,
+      tenantId: tenantB.id,
+    },
+  });
+  console.log('✅ Created User 1 for Tenant B:', userB1.email);
+
+  const userB2 = await prisma.user.upsert({
+    where: { email: 'user2@tenantb.com' },
+    update: {},
+    create: {
+      email: 'user2@tenantb.com',
+      password: hashedPasswordB,
+      tenantId: tenantB.id,
+    },
+  });
+  console.log('✅ Created User 2 for Tenant B:', userB2.email);
+
+  console.log('\n📋 Test Users Summary:');
+  console.log('Tenant A:');
+  console.log('  - user1@tenanta.com / password123');
+  console.log('  - user2@tenanta.com / password123');
+  console.log('Tenant B:');
+  console.log('  - user1@tenantb.com / password123');
+  console.log('  - user2@tenantb.com / password123');
+  console.log('\n✨ Seed completed successfully!');
+}
+
+main()
+  .catch((e) => {
+    console.error('❌ Seed failed:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
