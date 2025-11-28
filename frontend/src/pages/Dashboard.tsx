@@ -1,14 +1,103 @@
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import './Dashboard.css';
+import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { userService } from "../services/userService";
+import "./Dashboard.css";
+
+interface User {
+  id: string;
+  name?: string;
+  email: string;
+  tenantId: string;
+  role?: string; // "admin" or "user"
+  createdAt: string;
+}
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false); // Start with false, will be set to true when loading
+  const [error, setError] = useState("");
+
+  // Debug: Log users state changes
+  useEffect(() => {
+    console.log("📊 Users state changed:", users.length, "users:", users);
+    console.log("📊 Users array is:", users.length);
+    console.log("📊 First user:", users[0]);
+    console.log("📊 All users:", JSON.stringify(users, null, 2));
+  }, [users]);
+
+  useEffect(() => {
+    console.log(
+      "Dashboard useEffect - authLoading:",
+      authLoading,
+      "user:",
+      user,
+      "user.tenantId:",
+      user?.tenantId
+    );
+    // Wait for auth to finish loading, then load users when user is available
+    if (!authLoading && user && user.tenantId) {
+      console.log(
+        "✅ User available, loading users for tenant:",
+        user.tenantId
+      );
+      loadUsers();
+    } else if (!authLoading && !user) {
+      // If auth finished loading but no user, redirect to login
+      console.log("No user found, redirecting to login");
+      navigate("/login");
+    } else {
+      console.log("⏳ Waiting for auth to load...", {
+        authLoading,
+        hasUser: !!user,
+        tenantId: user?.tenantId,
+      });
+    }
+  }, [user, authLoading, navigate]);
+
+  const loadUsers = async () => {
+    console.log(
+      "🔄 loadUsers called - user:",
+      user,
+      "tenantId:",
+      user?.tenantId
+    );
+
+    if (!user || !user.tenantId) {
+      console.warn("Cannot load users: user or tenantId not available", {
+        user,
+        tenantId: user?.tenantId,
+      });
+      setError("User information not available. Please login again.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      // Fetch users from API - backend will filter based on user role
+      const usersData = await userService.getAllUsers();
+      console.log("✅ Loaded users from API:", usersData.length, usersData);
+      setUsers(usersData || []);
+    } catch (err: any) {
+      console.error("❌ Error loading users:", err);
+      setError(
+        err.message ||
+          "Failed to load users. Please check your connection and try again."
+      );
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -27,7 +116,7 @@ const Dashboard = () => {
 
       <main className="dashboard-main">
         <div className="dashboard-header">
-          <h2>Welcome back, {user?.email?.split('@')[0]}!</h2>
+          <h2>Welcome back, {user?.email?.split("@")[0]}!</h2>
           <p>Here's what's happening with your account today.</p>
         </div>
 
@@ -70,8 +159,23 @@ const Dashboard = () => {
               </svg>
             </div>
             <h3>Tenant ID</h3>
-            <p className="card-value">{user?.tenantId}</p>
+            <p className="card-value">
+              {user?.tenantId === "tenant-a-id"
+                ? "Tenant A"
+                : user?.tenantId === "tenant-b-id"
+                ? "Tenant B"
+                : user?.tenantId || "N/A"}
+            </p>
             <p className="card-label">Your Organization</p>
+            <p
+              style={{
+                fontSize: "0.75rem",
+                color: "#a0aec0",
+                marginTop: "0.5rem",
+              }}
+            >
+              ID: {user?.tenantId || "N/A"}
+            </p>
           </div>
 
           <div className="dashboard-card card-accent">
@@ -119,21 +223,153 @@ const Dashboard = () => {
 
         <div className="dashboard-stats">
           <div className="stat-card">
-            <h4>Quick Stats</h4>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <span className="stat-number">100%</span>
-                <span className="stat-label">Uptime</span>
+            <h4
+              style={{
+                marginBottom: "1.5rem",
+                fontSize: "1.25rem",
+                fontWeight: 600,
+              }}
+            >
+              {user?.tenantId === "tenant-a-id"
+                ? "Tenant A"
+                : user?.tenantId === "tenant-b-id"
+                ? "Tenant B"
+                : user?.tenantId}{" "}
+              Users List
+            </h4>
+            {authLoading || loading ? (
+              <div style={{ textAlign: "center", padding: "2rem" }}>
+                <p>{authLoading ? "Loading..." : "Loading users..."}</p>
               </div>
-              <div className="stat-item">
-                <span className="stat-number">24/7</span>
-                <span className="stat-label">Support</span>
+            ) : error ? (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "2rem",
+                  color: "#e53e3e",
+                }}
+              >
+                <p style={{ fontWeight: 600, marginBottom: "0.5rem" }}>
+                  Error loading users
+                </p>
+                <p style={{ fontSize: "0.9rem" }}>{error}</p>
+                <button
+                  onClick={loadUsers}
+                  style={{
+                    marginTop: "1rem",
+                    padding: "0.5rem 1rem",
+                    background: "#667eea",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  Retry
+                </button>
               </div>
-              <div className="stat-item">
-                <span className="stat-number">99.9%</span>
-                <span className="stat-label">Reliability</span>
+            ) : (
+              <div className="users-table-container">
+                {users.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "2rem" }}>
+                    <p
+                      style={{
+                        color: "#718096",
+                        marginBottom: "1rem",
+                        fontSize: "1rem",
+                      }}
+                    >
+                      No users found in your tenant ({user?.tenantId})
+                    </p>
+                    <button
+                      onClick={loadUsers}
+                      style={{
+                        padding: "0.5rem 1rem",
+                        background: "#667eea",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <table className="users-table">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Role</th>
+                          <th>Tenant</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map((u) => (
+                          <tr key={u.id}>
+                            <td>{u.id.substring(0, 8)}...</td>
+                            <td>
+                              {u.name ||
+                                u.email.split("@")[0].charAt(0).toUpperCase() +
+                                  u.email.split("@")[0].slice(1)}
+                            </td>
+                            <td>
+                              <a
+                                href={`mailto:${u.email}`}
+                                style={{
+                                  color: "#667eea",
+                                  textDecoration: "none",
+                                }}
+                              >
+                                {u.email}
+                              </a>
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  padding: "0.25rem 0.75rem",
+                                  borderRadius: "12px",
+                                  fontSize: "0.875rem",
+                                  fontWeight: 600,
+                                  backgroundColor:
+                                    u.role === "admin" ? "#667eea" : "#e2e8f0",
+                                  color:
+                                    u.role === "admin" ? "#ffffff" : "#4a5568",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {u.role || "user"}
+                              </span>
+                            </td>
+                            <td>
+                              {u.tenantId === "tenant-a-id"
+                                ? "Tenant A"
+                                : u.tenantId === "tenant-b-id"
+                                ? "Tenant B"
+                                : u.tenantId}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div
+                      style={{
+                        marginTop: "1rem",
+                        textAlign: "center",
+                        color: "#718096",
+                      }}
+                    >
+                      <p>Total Users: {users.length}</p>
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>
@@ -142,4 +378,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

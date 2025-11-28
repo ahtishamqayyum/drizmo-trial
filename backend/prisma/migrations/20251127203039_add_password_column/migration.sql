@@ -7,6 +7,7 @@ CREATE TABLE "users" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
+    -- pkey is PostgreSQL naming convention for primary key constraints
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 

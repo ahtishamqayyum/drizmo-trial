@@ -1,14 +1,13 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3001/auth";
-const TENANTS_API_URL = "http://localhost:3001/tenants";
+const API_URL = "http://localhost:3001/users";
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000, // 10 seconds timeout
+  timeout: 10000,
 });
 
 api.interceptors.request.use((config) => {
@@ -32,18 +31,10 @@ api.interceptors.response.use(
   }
 );
 
-const tenantsApi = axios.create({
-  baseURL: TENANTS_API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 10000,
-});
-
-export const authService = {
-  async login(email: string, password: string) {
+export const userService = {
+  async getAllUsers() {
     try {
-      const response = await api.post("/login", { email, password });
+      const response = await api.get("/");
       return response.data;
     } catch (error: any) {
       if (error.code === "ERR_NETWORK" || !error.response) {
@@ -55,23 +46,9 @@ export const authService = {
     }
   },
 
-  async signup(email: string, password: string, tenantId: string) {
+  async getUserById(id: string) {
     try {
-      const response = await api.post("/signup", { email, password, tenantId });
-      return response.data;
-    } catch (error: any) {
-      if (error.code === "ERR_NETWORK" || !error.response) {
-        throw new Error(
-          "Cannot connect to server. Please make sure the backend is running on port 3001."
-        );
-      }
-      throw error;
-    }
-  },
-
-  async getTenants() {
-    try {
-      const response = await tenantsApi.get("/");
+      const response = await api.get(`/${id}`);
       return response.data;
     } catch (error: any) {
       if (error.code === "ERR_NETWORK" || !error.response) {
@@ -83,3 +60,4 @@ export const authService = {
     }
   },
 };
+
