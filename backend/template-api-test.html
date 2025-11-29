@@ -1,0 +1,785 @@
+<!doctype html>
+<!-- cSpell:disable -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Template API Tester</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+      }
+
+      .section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+      }
+
+      .section h2 {
+        color: #667eea;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+        font-weight: 600;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      input:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      textarea {
+        min-height: 80px;
+        font-family: monospace;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        margin-right: 10px;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+
+      .token-display {
+        background: #e8f5e9;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        word-break: break-all;
+        font-family: monospace;
+        font-size: 12px;
+      }
+
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        background: #fff;
+        border: 2px solid #ddd;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .result.success {
+        border-color: #4caf50;
+        background: #e8f5e9;
+      }
+
+      .result.error {
+        border-color: #f44336;
+        background: #ffebee;
+      }
+
+      pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-size: 12px;
+        color: #333;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+
+      .status.success {
+        background: #4caf50;
+        color: white;
+      }
+
+      .status.error {
+        background: #f44336;
+        color: white;
+      }
+
+      .info {
+        background: #e3f2fd;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        color: #1976d2;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 Template API Tester</h1>
+      <p class="subtitle">Test all Template APIs with JWT Authentication</p>
+
+      <!-- Login Section -->
+      <div class="section">
+        <h2>1️⃣ Login / Signup (Get JWT Token)</h2>
+        <div class="info">
+          💡 Pehle login karein ya signup karein to JWT token milega. Uske baad
+          template APIs use kar sakte hain.
+        </div>
+        <div class="form-group">
+          <label>Email:</label>
+          <input
+            type="email"
+            id="loginEmail"
+            placeholder="user@example.com"
+            value="admin@test.com"
+          />
+        </div>
+        <div class="form-group">
+          <label>Password:</label>
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="password123"
+            value="password123"
+          />
+        </div>
+        <button onclick="login()">Login</button>
+        <button onclick="signup()" class="btn-success">Signup</button>
+        <div id="tokenDisplay" class="token-display" style="display: none">
+          <strong>JWT Token:</strong> <span id="tokenValue"></span>
+        </div>
+        <div id="loginResult"></div>
+      </div>
+
+      <!-- Create Template Section -->
+      <div class="section">
+        <h2>2️⃣ Create Template</h2>
+        <div class="form-group">
+          <label>Title:</label>
+          <input
+            type="text"
+            id="createTitle"
+            placeholder="My Template Title"
+            value="Test Template"
+          />
+        </div>
+        <div class="form-group">
+          <label>Items (JSON string - optional):</label>
+          <textarea
+            id="createItems"
+            placeholder='{"item1": "value1", "item2": "value2"}'
+          >
+{}</textarea
+          >
+        </div>
+        <button onclick="createTemplate()">Create Template</button>
+        <div id="createResult"></div>
+      </div>
+
+      <!-- List Templates Section -->
+      <div class="section">
+        <h2>3️⃣ List All Templates</h2>
+        <div class="info">
+          💡 Ye API aapke tenant ke saare templates dikhayega (deleted templates
+          nahi dikhenge)
+        </div>
+        <button onclick="listTemplates()">Get All Templates</button>
+        <div id="listResult"></div>
+      </div>
+
+      <!-- Update Template Section -->
+      <div class="section">
+        <h2>4️⃣ Update Template</h2>
+        <div class="form-group">
+          <label>Template ID:</label>
+          <input type="text" id="updateId" placeholder="template-uuid-here" />
+        </div>
+        <div class="form-group">
+          <label>New Title:</label>
+          <input type="text" id="updateTitle" placeholder="Updated Title" />
+        </div>
+        <div class="form-group">
+          <label>New Items (JSON string - optional):</label>
+          <textarea
+            id="updateItems"
+            placeholder='{"item1": "updated_value"}'
+          ></textarea>
+        </div>
+        <button onclick="updateTemplate()">Update Template</button>
+        <div id="updateResult"></div>
+      </div>
+
+      <!-- Delete Template Section -->
+      <div class="section">
+        <h2>5️⃣ Soft Delete Template</h2>
+        <div class="info">
+          💡 Ye template ko permanently delete nahi karega, sirf deletedAt
+          timestamp set karega
+        </div>
+        <div class="form-group">
+          <label>Template ID:</label>
+          <input type="text" id="deleteId" placeholder="template-uuid-here" />
+        </div>
+        <button onclick="deleteTemplate()" class="btn-danger">
+          Soft Delete Template
+        </button>
+        <div id="deleteResult"></div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:3001";
+      let jwtToken = "";
+      let currentUserId = "";
+
+      // Login function
+      async function login() {
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+
+        if (!email || !password) {
+          alert("❌ Email aur Password zaroori hain!");
+          return;
+        }
+
+        try {
+          console.log("🔐 Attempting login...", email);
+          const response = await fetch(`${API_BASE}/auth/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password }),
+          });
+
+          console.log("📡 Login Response Status:", response.status);
+          console.log("📡 Login Response Headers:", response.headers);
+
+          let data;
+          try {
+            data = await response.json();
+            console.log("📦 Login Response Data:", data);
+          } catch (e) {
+            const text = await response.text();
+            console.error("❌ JSON Parse Error:", text);
+            data = {
+              error: "Invalid JSON response",
+              status: response.status,
+              statusText: response.statusText,
+              rawResponse: text,
+            };
+          }
+
+          if (response.ok && data.access_token) {
+            jwtToken = data.access_token;
+            currentUserId = data.user?.id || "";
+
+            // Verify token and user data
+            console.log(
+              "✅ Token received:",
+              jwtToken.substring(0, 50) + "..."
+            );
+            console.log("✅ User data:", data.user);
+            console.log("✅ Tenant ID:", data.user?.tenantId);
+
+            if (!data.user?.tenantId) {
+              console.warn("⚠️ Warning: Tenant ID missing in login response!");
+            }
+
+            document.getElementById("tokenValue").textContent =
+              jwtToken.substring(0, 50) + "...";
+            document.getElementById("tokenDisplay").style.display = "block";
+            showResult("loginResult", "Login successful!", data, true);
+            alert(
+              "✅ Login successful! Token saved. Ab aap template APIs test kar sakte hain."
+            );
+          } else {
+            console.error("❌ Login failed:", data);
+            showResult("loginResult", "Login failed", data, false);
+            alert(
+              "❌ Login failed: " +
+                (data.message || data.error || "Unknown error") +
+                "\n\nStatus: " +
+                response.status
+            );
+          }
+        } catch (error) {
+          console.error("❌ Login error:", error);
+          const errorMsg =
+            error.message ||
+            "Network error. Backend server check karein (http://localhost:3001)";
+          showResult(
+            "loginResult",
+            "Error",
+            { error: errorMsg, details: error.toString() },
+            false
+          );
+          alert("❌ Error: " + errorMsg);
+        }
+      }
+
+      // Signup function
+      async function signup() {
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+        const tenantId = prompt(
+          'Tenant ID enter karein (e.g., "Tenant A" ya tenant UUID):',
+          "Tenant A"
+        );
+
+        if (!tenantId) {
+          alert("Tenant ID zaroori hai!");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/auth/signup`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password, tenantId }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            jwtToken = data.access_token;
+            currentUserId = data.user.id;
+            document.getElementById("tokenValue").textContent = jwtToken;
+            document.getElementById("tokenDisplay").style.display = "block";
+            showResult("loginResult", "Signup successful!", data, true);
+            alert(
+              "✅ Signup successful! Ab aap template APIs test kar sakte hain."
+            );
+          } else {
+            showResult("loginResult", "Signup failed", data, false);
+          }
+        } catch (error) {
+          showResult("loginResult", "Error", { error: error.message }, false);
+        }
+      }
+
+      // Create Template
+      async function createTemplate() {
+        if (!jwtToken) {
+          alert("❌ Pehle login karein!");
+          return;
+        }
+
+        const title = document.getElementById("createTitle").value;
+        const items = document.getElementById("createItems").value;
+
+        if (!title) {
+          alert("❌ Title zaroori hai!");
+          return;
+        }
+
+        try {
+          console.log("📝 Creating template...");
+          console.log("🔑 Using token:", jwtToken.substring(0, 30) + "...");
+          console.log("📋 Title:", title);
+
+          const requestBody = { title, items: items || null };
+          console.log("📦 Request body:", requestBody);
+
+          const response = await fetch(`${API_BASE}/templates`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${jwtToken}`,
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          console.log("📡 Response Status:", response.status);
+          console.log(
+            "📡 Response Headers:",
+            Object.fromEntries(response.headers.entries())
+          );
+
+          let data;
+          try {
+            const text = await response.text();
+            console.log("📦 Raw Response:", text);
+            data = JSON.parse(text);
+            console.log("📦 Parsed Data:", data);
+          } catch (e) {
+            console.error("❌ JSON Parse Error:", e);
+            data = {
+              error: "Invalid JSON response",
+              status: response.status,
+              statusText: response.statusText,
+              parseError: e.message,
+            };
+          }
+
+          showResult(
+            "createResult",
+            response.ok
+              ? "Template created successfully!"
+              : "Failed to create template",
+            data,
+            response.ok
+          );
+
+          if (response.ok && data.id) {
+            document.getElementById("updateId").value = data.id;
+            document.getElementById("deleteId").value = data.id;
+            alert("✅ Template created successfully! ID: " + data.id);
+          } else {
+            const errorMsg =
+              data.message || data.error || data.statusText || "Unknown error";
+            console.error("❌ Error details:", data);
+            alert(
+              "❌ Template create nahi hua!\n\n" +
+                "Error: " +
+                errorMsg +
+                "\n" +
+                "Status: " +
+                response.status +
+                "\n\n" +
+                "Console mein details check karein (F12)"
+            );
+          }
+        } catch (error) {
+          console.error("❌ Create template error:", error);
+          showResult(
+            "createResult",
+            "Error",
+            {
+              error: error.message,
+              details: error.toString(),
+              stack: error.stack,
+            },
+            false
+          );
+          alert(
+            "❌ Network Error: " +
+              error.message +
+              "\n\nBackend server check karein!"
+          );
+        }
+      }
+
+      // List Templates
+      async function listTemplates() {
+        if (!jwtToken) {
+          alert("❌ Pehle login karein!");
+          return;
+        }
+
+        try {
+          console.log("📋 Fetching templates...");
+          console.log("🔑 Using token:", jwtToken.substring(0, 30) + "...");
+
+          const response = await fetch(`${API_BASE}/templates`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${jwtToken}`,
+            },
+          });
+
+          console.log("📡 Response Status:", response.status);
+          console.log(
+            "📡 Response Headers:",
+            Object.fromEntries(response.headers.entries())
+          );
+
+          let data;
+          try {
+            const text = await response.text();
+            console.log("📦 Raw Response:", text);
+            data = JSON.parse(text);
+            console.log("📦 Parsed Data:", data);
+          } catch (e) {
+            console.error("❌ JSON Parse Error:", e);
+            data = {
+              error: "Invalid JSON response",
+              status: response.status,
+              statusText: response.statusText,
+              parseError: e.message,
+            };
+          }
+
+          const count = Array.isArray(data) ? data.length : 0;
+          showResult(
+            "listResult",
+            response.ok
+              ? `Found ${count} templates`
+              : "Failed to fetch templates",
+            data,
+            response.ok
+          );
+
+          if (response.ok) {
+            alert(`✅ ${count} templates mil gaye!`);
+          } else {
+            const errorMsg =
+              data.message || data.error || data.statusText || "Unknown error";
+            console.error("❌ Error details:", data);
+            alert(
+              "❌ Templates fetch nahi ho paye!\n\n" +
+                "Error: " +
+                errorMsg +
+                "\n" +
+                "Status: " +
+                response.status +
+                "\n\n" +
+                "Console mein details check karein (F12)"
+            );
+          }
+        } catch (error) {
+          console.error("❌ List templates error:", error);
+          showResult(
+            "listResult",
+            "Error",
+            {
+              error: error.message,
+              details: error.toString(),
+              stack: error.stack,
+            },
+            false
+          );
+          alert(
+            "❌ Network Error: " +
+              error.message +
+              "\n\nBackend server check karein!"
+          );
+        }
+      }
+
+      // Update Template
+      async function updateTemplate() {
+        if (!jwtToken) {
+          alert("❌ Pehle login karein!");
+          return;
+        }
+
+        const id = document.getElementById("updateId").value;
+        const title = document.getElementById("updateTitle").value;
+        const items = document.getElementById("updateItems").value;
+
+        if (!id) {
+          alert("❌ Template ID zaroori hai!");
+          return;
+        }
+
+        const updateData = {};
+        if (title) updateData.title = title;
+        if (items) updateData.items = items;
+
+        if (Object.keys(updateData).length === 0) {
+          alert("❌ Kuch update karne ke liye title ya items enter karein!");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/templates/${id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${jwtToken}`,
+            },
+            body: JSON.stringify(updateData),
+          });
+
+          let data;
+          try {
+            data = await response.json();
+          } catch (e) {
+            data = {
+              error: "Invalid JSON response",
+              status: response.status,
+              statusText: response.statusText,
+            };
+          }
+
+          showResult(
+            "updateResult",
+            response.ok
+              ? "Template updated successfully!"
+              : "Failed to update template",
+            data,
+            response.ok
+          );
+
+          if (response.ok) {
+            alert("✅ Template update ho gaya!");
+          } else {
+            alert(
+              "❌ Template update nahi hua: " +
+                (data.message || data.error || "Unknown error")
+            );
+          }
+        } catch (error) {
+          console.error("Update template error:", error);
+          showResult(
+            "updateResult",
+            "Error",
+            { error: error.message, details: error.toString() },
+            false
+          );
+          alert("❌ Error: " + error.message);
+        }
+      }
+
+      // Delete Template (Soft Delete)
+      async function deleteTemplate() {
+        if (!jwtToken) {
+          alert("❌ Pehle login karein!");
+          return;
+        }
+
+        const id = document.getElementById("deleteId").value;
+
+        if (!id) {
+          alert("❌ Template ID zaroori hai!");
+          return;
+        }
+
+        if (
+          !confirm(
+            "Kya aap sure hain ki aap is template ko soft delete karna chahte hain?"
+          )
+        ) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/templates/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${jwtToken}`,
+            },
+          });
+
+          let data;
+          try {
+            data = await response.json();
+          } catch (e) {
+            data = {
+              error: "Invalid JSON response",
+              status: response.status,
+              statusText: response.statusText,
+            };
+          }
+
+          showResult(
+            "deleteResult",
+            response.ok
+              ? "Template soft deleted successfully!"
+              : "Failed to delete template",
+            data,
+            response.ok
+          );
+
+          if (response.ok) {
+            alert("✅ Template soft delete ho gaya!");
+          } else {
+            alert(
+              "❌ Template delete nahi hua: " +
+                (data.message || data.error || "Unknown error")
+            );
+          }
+        } catch (error) {
+          console.error("Delete template error:", error);
+          showResult(
+            "deleteResult",
+            "Error",
+            { error: error.message, details: error.toString() },
+            false
+          );
+          alert("❌ Error: " + error.message);
+        }
+      }
+
+      // Show result helper
+      function showResult(elementId, message, data, success) {
+        const element = document.getElementById(elementId);
+        const statusClass = success ? "success" : "error";
+        const statusText = success ? "✅ Success" : "❌ Error";
+
+        element.innerHTML = `
+                <div class="result ${statusClass}">
+                    <span class="status ${statusClass}">${statusText}</span>
+                    <strong>${message}</strong>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+      }
+    </script>
+  </body>
+</html>

@@ -4,10 +4,11 @@ import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { TenantsModule } from "./tenants/tenants.module";
+import { TemplatesModule } from "./templates/templates.module";
 import { TenantInterceptor } from "./common/interceptors/tenant.interceptor";
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, TenantsModule],
+  imports: [PrismaModule, AuthModule, UsersModule, TenantsModule, TemplatesModule],
   providers: [
     {
       provide: APP_INTERCEPTOR,
