@@ -14,21 +14,36 @@ export class TenantInterceptor implements NestInterceptor {
 
     // Extract tenant_id from JWT payload (set by JwtStrategy)
     // This ensures tenant_id is always available on the request object
-    if (request.user && request.user.tenantId) {
-      request.tenantId = request.user.tenantId;
-      console.log(
-        "TenantInterceptor - Tenant ID extracted:",
-        request.tenantId,
-        "for user:",
-        request.user.email
-      );
-    } else if (request.user) {
-      // If user exists but no tenantId, throw error
-      console.error(
-        "TenantInterceptor - No tenantId found for user:",
-        request.user
-      );
-      throw new UnauthorizedException("Tenant ID not found in token");
+    // Interceptor runs AFTER guards, so request.user should be available
+
+    console.log("TenantInterceptor - Request user:", request.user);
+    console.log("TenantInterceptor - Request headers:", request.headers?.authorization?.substring(0, 20) + "...");
+
+    if (request.user) {
+      if (request.user.tenantId) {
+        request.tenantId = request.user.tenantId;
+        console.log(
+          "✅ TenantInterceptor - Tenant ID extracted:",
+          request.tenantId,
+          "for user:",
+          request.user.email
+        );
+      } else {
+        // If user exists but no tenantId, log warning but don't throw error here
+        // Let the controller handle it
+        console.warn(
+          "⚠️ TenantInterceptor - No tenantId found for user:",
+          request.user
+        );
+        // Try to get from request if it was set elsewhere
+        if (!request.tenantId) {
+          request.tenantId = request.user.tenantId || null;
+        }
+      }
+    } else {
+      // User not authenticated - this is fine for public routes
+      // Guards will handle authentication
+      console.log("TenantInterceptor - No user found (might be public route)");
     }
 
     return next.handle();

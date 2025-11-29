@@ -2,6 +2,8 @@
 
 A modern, production-ready full-stack application built with NestJS backend and React frontend, featuring multi-tenant architecture, role-based access control, and beautiful UI.
 
+<!-- cSpell:words Drizmo drizmo signup Signup findstr taskkill -->
+
 ## 🚀 Features
 
 ### Authentication & Authorization
@@ -18,6 +20,15 @@ A modern, production-ready full-stack application built with NestJS backend and 
 - ✅ **User Dashboard** - Users can only view their own data
 - ✅ **Tenant Selection** - Beautiful dropdown for tenant selection during signup
 - ✅ **User Profile** - View and manage user profiles
+
+### Template Management
+
+- ✅ **Create Template** - Create templates with automatic `tenant_id` assignment
+- ✅ **List Templates** - View all templates filtered by tenant (soft-deleted templates are excluded)
+- ✅ **Update Template** - Update template data with tenant ownership validation
+- ✅ **Soft Delete** - Soft delete templates (sets `deletedAt` timestamp)
+- ✅ **Tenant Isolation** - All queries filter by `tenant_id` automatically
+- ✅ **Multi-Tenant Security** - Complete data separation between tenants
 
 ### UI/UX
 
@@ -272,14 +283,93 @@ GET /users/profile/me
 Authorization: Bearer <jwt_token>
 ```
 
-### Tenant Endpoints
+### Template Management Endpoints
 
-#### Get All Tenants
+Complete CRUD operations for templates with multi-tenant support. All operations are filtered by `tenant_id` automatically.
+
+#### Create Template
 
 ```http
-GET /tenants
+POST /templates
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+
+{
+  "title": "My Template",
+  "items": "{\"item1\": \"value1\", \"item2\": \"value2\"}"
+}
+```
+
+**Response:**
+
+```json
+{
+  "id": "template-uuid",
+  "title": "My Template",
+  "items": "{\"item1\": \"value1\", \"item2\": \"value2\"}",
+  "tenantId": "tenant-uuid",
+  "createdAt": "2024-11-29T07:00:00.000Z",
+  "updatedAt": "2024-11-29T07:00:00.000Z"
+}
+```
+
+#### List Templates
+
+```http
+GET /templates
 Authorization: Bearer <jwt_token>
 ```
+
+**Response:**
+
+```json
+[
+  {
+    "id": "template-uuid-1",
+    "title": "Template 1",
+    "items": "{}",
+    "tenantId": "tenant-uuid",
+    "createdAt": "2024-11-29T07:00:00.000Z",
+    "updatedAt": "2024-11-29T07:00:00.000Z"
+  }
+]
+```
+
+**Note:** Only returns templates for the authenticated user's tenant. Soft-deleted templates are excluded.
+
+#### Get Single Template
+
+```http
+GET /templates/:id
+Authorization: Bearer <jwt_token>
+```
+
+#### Update Template
+
+```http
+PATCH /templates/:id
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+
+{
+  "title": "Updated Template Title",
+  "items": "{\"item1\": \"updated_value\"}"
+}
+```
+
+#### Soft Delete Template
+
+```http
+DELETE /templates/:id
+Authorization: Bearer <jwt_token>
+```
+
+**Note:** Template is soft-deleted (sets `deletedAt` timestamp). Users can only access data from their own tenant.
+</think>
+GET /tenants
+Authorization: Bearer <jwt_token>
+
+````
 
 ## 🗄️ Database Schema
 
@@ -287,13 +377,14 @@ Authorization: Bearer <jwt_token>
 
 ```prisma
 model Tenant {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   users     User[]
+  templates Template[]
 }
-```
+````
 
 ### User Model
 
@@ -307,6 +398,23 @@ model User {
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+```
+
+### Template Model
+
+```prisma
+model Template {
+  id        String    @id @default(uuid())
+  title     String
+  items     String?   // JSON string for template items
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deletedAt DateTime? // Soft delete timestamp
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("templates")
 }
 ```
 
@@ -350,6 +458,10 @@ drizmo-trial/
 │   │   ├── tenants/          # Tenants module
 │   │   │   ├── tenants.controller.ts
 │   │   │   └── tenants.service.ts
+│   │   ├── templates/        # Templates module
+│   │   │   ├── templates.controller.ts
+│   │   │   ├── templates.service.ts
+│   │   │   └── dto/
 │   │   ├── prisma/           # Prisma service
 │   │   ├── common/           # Common utilities
 │   │   │   ├── decorators/   # Custom decorators
@@ -426,6 +538,42 @@ npm run test:cov
 cd frontend
 npm run test
 ```
+
+### Template API Testing
+
+#### Using HTML Test Page
+
+1. **Start Backend Server:**
+
+   ```bash
+   cd backend
+   npm run start:dev
+   ```
+
+2. **Open Test Page:**
+
+   - Open `backend/template-api-test.html` in Chrome browser
+   - Test all Template APIs with JWT Authentication
+
+3. **Test Page Features:**
+   - Login/Signup functionality
+   - Create Template API testing
+   - List Templates API testing
+   - Update Template API testing
+   - Soft Delete API testing
+
+#### Using Browser Console
+
+```javascript
+// Complete test flow in browser console
+// 1. Login to get JWT token
+// 2. Test all CRUD operations
+// 3. All queries filter by tenant_id
+```
+
+**Test File Location:** `backend/template-api-test.html`
+
+**API Documentation:** See `backend/API_ENDPOINTS.md` for complete API testing guide
 
 ## 📝 Available Scripts
 
@@ -527,6 +675,33 @@ Drizmo Development Team
 - React team for the UI library
 - Prisma team for the excellent ORM
 - All open-source contributors
+
+---
+
+## 📅 Recent Updates (November 2024)
+
+### Template Management System
+
+- ✅ **Complete CRUD Operations** - Create, Read, Update, and Soft Delete templates
+- ✅ **Multi-Tenant Support** - All operations automatically filter by `tenant_id`
+- ✅ **Tenant Isolation** - Complete data separation between tenants
+- ✅ **Soft Delete** - Templates are soft-deleted (not permanently removed)
+- ✅ **JWT Authentication** - All endpoints require valid JWT token
+- ✅ **API Testing Tools** - HTML test page for easy API testing
+- ✅ **Comprehensive Documentation** - Complete API endpoints guide
+
+### Files Added
+
+- `backend/src/templates/` - Complete templates module
+- `backend/template-api-test.html` - Interactive API testing page
+- `backend/API_ENDPOINTS.md` - Complete API documentation
+- `backend/TESTING_GUIDE.md` - Testing guide and troubleshooting
+
+### Database Changes
+
+- Added `Template` model to Prisma schema
+- Migration: `20251129071858_add_template_module`
+- Added `deleted_at` column for soft delete functionality
 
 ---
 
