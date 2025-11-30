@@ -17,59 +17,19 @@ const Dashboard = () => {
   const { user, logout, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false); // Start with false, will be set to true when loading
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Debug: Log users state changes
   useEffect(() => {
-    console.log("📊 Users state changed:", users.length, "users:", users);
-    console.log("📊 Users array is:", users.length);
-    console.log("📊 First user:", users[0]);
-    console.log("📊 All users:", JSON.stringify(users, null, 2));
-  }, [users]);
-
-  useEffect(() => {
-    console.log(
-      "Dashboard useEffect - authLoading:",
-      authLoading,
-      "user:",
-      user,
-      "user.tenantId:",
-      user?.tenantId
-    );
-    // Wait for auth to finish loading, then load users when user is available
     if (!authLoading && user && user.tenantId) {
-      console.log(
-        "✅ User available, loading users for tenant:",
-        user.tenantId
-      );
       loadUsers();
     } else if (!authLoading && !user) {
-      // If auth finished loading but no user, redirect to login
-      console.log("No user found, redirecting to login");
       navigate("/login");
-    } else {
-      console.log("⏳ Waiting for auth to load...", {
-        authLoading,
-        hasUser: !!user,
-        tenantId: user?.tenantId,
-      });
     }
   }, [user, authLoading, navigate]);
 
   const loadUsers = async () => {
-    console.log(
-      "🔄 loadUsers called - user:",
-      user,
-      "tenantId:",
-      user?.tenantId
-    );
-
     if (!user || !user.tenantId) {
-      console.warn("Cannot load users: user or tenantId not available", {
-        user,
-        tenantId: user?.tenantId,
-      });
       setError("User information not available. Please login again.");
       setLoading(false);
       return;
@@ -79,12 +39,9 @@ const Dashboard = () => {
     setError("");
 
     try {
-      // Fetch users from API - backend will filter based on user role
       const usersData = await userService.getAllUsers();
-      console.log("✅ Loaded users from API:", usersData.length, usersData);
       setUsers(usersData || []);
     } catch (err: any) {
-      console.error("❌ Error loading users:", err);
       setError(
         err.message ||
           "Failed to load users. Please check your connection and try again."
@@ -107,6 +64,12 @@ const Dashboard = () => {
           <h1>Drizmo</h1>
         </div>
         <div className="nav-user">
+          <button
+            onClick={() => navigate("/templates")}
+            className="templates-link-button"
+          >
+            Templates
+          </button>
           <span className="user-email">{user?.email}</span>
           <button onClick={handleLogout} className="logout-button">
             Logout

@@ -11,78 +11,101 @@ import { UpdateTemplateDto } from './dto/update-template.dto';
 export class TemplatesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createTemplateDto: CreateTemplateDto, tenantId: string) {
+  async create(createTemplateDto: CreateTemplateDto, tenantId: string, userId: string) {
     try {
       return await this.prisma.template.create({
         data: {
           ...createTemplateDto,
           tenantId,
+          userId,
         },
         select: {
           id: true,
           title: true,
           items: true,
           tenantId: true,
+          userId: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
           createdAt: true,
           updatedAt: true,
         },
       });
     } catch (error) {
-      console.error('Template creation error:', error);
-      // Handle foreign key constraint violation (invalid tenant ID)
       if (error.code === 'P2003') {
         throw new ForbiddenException(
-          'Invalid tenant ID. Tenant does not exist.',
+          'Invalid tenant ID or user ID. Tenant or user does not exist.',
         );
       }
       throw error;
     }
   }
 
-  async findAll(tenantId: string) {
-    console.log('🔍 TemplatesService.findAll - Filtering by tenantId:', tenantId);
-
-    // Verify tenantId is not empty
+  async findAll(tenantId: string, userRole: string = 'user', userId: string) {
     if (!tenantId || tenantId.trim() === '') {
-      console.error('❌ Invalid tenantId provided:', tenantId);
       return [];
     }
 
-    const templates = await this.prisma.template.findMany({
-      where: {
-        tenantId,
-        deletedAt: null, // Only show non-deleted templates
-      },
+    const where: any = {
+      tenantId,
+      deletedAt: null,
+    };
+
+    if (userRole !== 'admin') {
+      where.userId = userId;
+    }
+
+    return await this.prisma.template.findMany({
+      where,
       select: {
         id: true,
         title: true,
         items: true,
         tenantId: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
       orderBy: { createdAt: 'desc' },
     });
-
-    console.log(
-      `✅ Found ${templates.length} templates for tenant ${tenantId}`,
-    );
-
-    return templates;
   }
 
-  async findOne(id: string, tenantId: string) {
+  async findOne(id: string, tenantId: string, userRole: string, userId: string) {
+    const where: any = {
+      id,
+      tenantId, // Always filter by tenantId for security
+      deletedAt: null, // Don't return deleted templates
+    };
+
+    // Regular users can only access their own templates
+    if (userRole !== 'admin') {
+      where.userId = userId;
+    }
+
     const template = await this.prisma.template.findFirst({
-      where: {
-        id,
-        tenantId, // Always filter by tenantId for security
-        deletedAt: null, // Don't return deleted templates
-      },
+      where,
       select: {
         id: true,
         title: true,
         items: true,
         tenantId: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -101,19 +124,30 @@ export class TemplatesService {
     id: string,
     updateTemplateDto: UpdateTemplateDto,
     tenantId: string,
+    userRole: string,
+    userId: string,
   ) {
-    // First verify the template exists and belongs to the tenant
+    const where: any = {
+      id,
+      tenantId, // Critical: Only allow update if tenant_id matches
+      deletedAt: null, // Don't allow updating deleted templates
+    };
+
+    // Regular users can only update their own templates
+    if (userRole !== 'admin') {
+      where.userId = userId;
+    }
+
+    // First verify the template exists and user has access
     const existingTemplate = await this.prisma.template.findFirst({
-      where: {
-        id,
-        tenantId, // Critical: Only allow update if tenant_id matches
-        deletedAt: null, // Don't allow updating deleted templates
-      },
+      where,
     });
 
     if (!existingTemplate) {
       throw new NotFoundException(
-        'Template not found or access denied. You can only update templates from your tenant.',
+        userRole === 'admin'
+          ? 'Template not found or access denied. You can only update templates from your tenant.'
+          : 'Template not found or access denied. You can only update your own templates.',
       );
     }
 
@@ -125,25 +159,41 @@ export class TemplatesService {
         title: true,
         items: true,
         tenantId: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
     });
   }
 
-  async remove(id: string, tenantId: string) {
-    // First verify the template exists and belongs to the tenant
+  async remove(id: string, tenantId: string, userRole: string, userId: string) {
+    const where: any = {
+      id,
+      tenantId, // Critical: Only allow soft delete if tenant_id matches
+      deletedAt: null, // Don't allow deleting already deleted templates
+    };
+
+    // Regular users can only delete their own templates
+    if (userRole !== 'admin') {
+      where.userId = userId;
+    }
+
+    // First verify the template exists and user has access
     const existingTemplate = await this.prisma.template.findFirst({
-      where: {
-        id,
-        tenantId, // Critical: Only allow soft delete if tenant_id matches
-        deletedAt: null, // Don't allow deleting already deleted templates
-      },
+      where,
     });
 
     if (!existingTemplate) {
       throw new NotFoundException(
-        'Template not found or access denied. You can only delete templates from your tenant.',
+        userRole === 'admin'
+          ? 'Template not found or access denied. You can only delete templates from your tenant.'
+          : 'Template not found or access denied. You can only delete your own templates.',
       );
     }
 
@@ -158,6 +208,13 @@ export class TemplatesService {
         title: true,
         items: true,
         tenantId: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
         deletedAt: true,
         createdAt: true,
         updatedAt: true,

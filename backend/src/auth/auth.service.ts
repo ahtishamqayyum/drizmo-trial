@@ -19,49 +19,30 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    console.log("AuthService.validateUser - Found user:", {
-      email: user?.email,
-      tenantId: user?.tenantId,
-      role: user?.role,
-    });
     if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user;
-      console.log(
-        "AuthService.validateUser - Returning user (without password):",
-        result
-      );
-      return result; // This includes role field from database
+      return result;
     }
-    console.log("AuthService.validateUser - Invalid credentials for:", email);
     return null;
   }
 
   async login(user: any) {
-    console.log("AuthService.login - User data:", {
-      id: user.id,
-      email: user.email,
-      tenantId: user.tenantId,
-      role: user.role,
-    });
     const payload = {
       email: user.email,
       sub: user.id,
       tenantId: user.tenantId,
-      role: user.role || "user", // Include role in JWT
+      role: user.role || "user",
     };
-    console.log("AuthService.login - JWT payload:", payload);
     const token = this.jwtService.sign(payload);
-    const response = {
+    return {
       access_token: token,
       user: {
         id: user.id,
         email: user.email,
         tenantId: user.tenantId,
-        role: user.role || "user", // Include role in response
+        role: user.role || "user",
       },
     };
-    console.log("AuthService.login - Response user:", response.user);
-    return response;
   }
 
   async signup(createUserDto: CreateUserDto) {
@@ -119,14 +100,6 @@ export class AuthService {
 
       return this.login(user);
     } catch (error) {
-      // Log error for debugging
-      console.error("Signup error:", {
-        message: error.message,
-        stack: error.stack,
-        tenantId: createUserDto.tenantId,
-        email: createUserDto.email,
-      });
-
       // Re-throw HttpExceptions as-is
       if (
         error instanceof BadRequestException ||

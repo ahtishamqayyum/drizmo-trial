@@ -23,11 +23,17 @@ A modern, production-ready full-stack application built with NestJS backend and 
 
 ### Template Management
 
-- ✅ **Create Template** - Create templates with automatic `tenant_id` assignment
-- ✅ **List Templates** - View all templates filtered by tenant (soft-deleted templates are excluded)
-- ✅ **Update Template** - Update template data with tenant ownership validation
-- ✅ **Soft Delete** - Soft delete templates (sets `deletedAt` timestamp)
+- ✅ **Create Template** - Create templates with automatic `tenant_id` and `user_id` assignment
+- ✅ **List Templates** - Role-based template listing:
+  - **Admin Users**: View all templates from their tenant (all users' templates)
+  - **Regular Users**: View only their own templates
+- ✅ **Update Template** - Update template data with role-based access control
+- ✅ **Soft Delete** - Soft delete templates with role-based access control:
+  - **Admin Users**: Can delete any template from their tenant
+  - **Regular Users**: Can only delete their own templates
 - ✅ **Tenant Isolation** - All queries filter by `tenant_id` automatically
+- ✅ **User Isolation** - Regular users can only access their own templates
+- ✅ **Creator Tracking** - Each template tracks the creator user (email displayed)
 - ✅ **Multi-Tenant Security** - Complete data separation between tenants
 
 ### UI/UX
@@ -308,10 +314,17 @@ Authorization: Bearer <jwt_token>
   "title": "My Template",
   "items": "{\"item1\": \"value1\", \"item2\": \"value2\"}",
   "tenantId": "tenant-uuid",
+  "userId": "user-uuid",
+  "user": {
+    "id": "user-uuid",
+    "email": "user@example.com"
+  },
   "createdAt": "2024-11-29T07:00:00.000Z",
   "updatedAt": "2024-11-29T07:00:00.000Z"
 }
 ```
+
+**Note:** Template is automatically assigned to the authenticated user (`userId` from JWT token).
 
 #### List Templates
 
@@ -329,13 +342,23 @@ Authorization: Bearer <jwt_token>
     "title": "Template 1",
     "items": "{}",
     "tenantId": "tenant-uuid",
+    "userId": "user-uuid",
+    "user": {
+      "id": "user-uuid",
+      "email": "user@example.com"
+    },
     "createdAt": "2024-11-29T07:00:00.000Z",
     "updatedAt": "2024-11-29T07:00:00.000Z"
   }
 ]
 ```
 
-**Note:** Only returns templates for the authenticated user's tenant. Soft-deleted templates are excluded.
+**Note:**
+
+- **Admin Users**: Returns all templates from their tenant (all users' templates)
+- **Regular Users**: Returns only their own templates
+- Soft-deleted templates are excluded
+- Each template includes creator user information
 
 #### Get Single Template
 
@@ -364,12 +387,19 @@ DELETE /templates/:id
 Authorization: Bearer <jwt_token>
 ```
 
-**Note:** Template is soft-deleted (sets `deletedAt` timestamp). Users can only access data from their own tenant.
-</think>
+**Note:**
+
+- Template is soft-deleted (sets `deletedAt` timestamp)
+- **Admin Users**: Can delete any template from their tenant
+- **Regular Users**: Can only delete their own templates
+- All operations enforce tenant isolation
+
+### Tenant Endpoints
+
+```http
 GET /tenants
 Authorization: Bearer <jwt_token>
-
-````
+```
 
 ## 🗄️ Database Schema
 
@@ -384,20 +414,23 @@ model Tenant {
   users     User[]
   templates Template[]
 }
-````
+```
 
 ### User Model
 
 ```prisma
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String     @id @default(uuid())
+  email     String     @unique
   password  String
-  tenantId  String
-  role      String   @default("user") // "admin" or "user"
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  tenantId  String     @map("tenant_id")
+  role      String     @default("user") // "admin" or "user"
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  templates Template[]
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  @@map("users")
 }
 ```
 
@@ -408,11 +441,13 @@ model Template {
   id        String    @id @default(uuid())
   title     String
   items     String?   // JSON string for template items
-  tenantId  String
+  tenantId  String    @map("tenant_id")
+  userId    String    @map("user_id")
   tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  deletedAt DateTime? // Soft delete timestamp
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt DateTime? @map("deleted_at") // Soft delete timestamp
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
   @@map("templates")
 }
@@ -424,12 +459,16 @@ model Template {
 
 - Can view all users in their tenant
 - Can see newly registered users automatically
+- **Can view all templates from their tenant** (all users' templates)
+- **Can edit/delete any template from their tenant**
 - Full access to tenant data
 
 ### User Role
 
 - Can only view their own data
 - Cannot see other users' information
+- **Can only view their own templates**
+- **Can only edit/delete their own templates**
 - Limited access based on tenant
 
 ### Tenant Isolation
@@ -479,15 +518,19 @@ drizmo-trial/
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
-│   │   │   ├── Login.tsx     # Login/Signup page
-│   │   │   └── Dashboard.tsx # User dashboard
+│   │   │   ├── Login.tsx         # Login/Signup page
+│   │   │   ├── Dashboard.tsx     # User dashboard
+│   │   │   ├── TemplatesList.tsx  # Templates list page
+│   │   │   ├── AddTemplate.tsx    # Add template page
+│   │   │   └── EditTemplate.tsx  # Edit template page
 │   │   ├── context/
-│   │   │   └── AuthContext.tsx # Auth context provider
+│   │   │   └── AuthContext.tsx   # Auth context provider
 │   │   ├── services/
-│   │   │   ├── authService.ts # Auth API service
-│   │   │   └── userService.ts # User API service
-│   │   ├── App.tsx           # Main app component
-│   │   └── main.tsx          # Entry point
+│   │   │   ├── authService.ts     # Auth API service
+│   │   │   ├── userService.ts     # User API service
+│   │   │   └── templateService.ts # Template API service
+│   │   ├── App.tsx               # Main app component
+│   │   └── main.tsx              # Entry point
 │   └── package.json
 ├── package.json              # Root package.json
 └── README.md                 # This file
@@ -510,7 +553,19 @@ drizmo-trial/
 - User statistics
 - Tenant information
 - Users list (role-based)
+- Navigation to Templates page
 - Logout functionality
+
+### Templates Management Pages
+
+- **Templates List** - View all templates with role-based filtering:
+  - Admin: See all tenant templates with creator email
+  - Regular Users: See only their own templates
+- **Add Template** - Create new templates with title and items
+- **Edit Template** - Update existing templates (role-based access)
+- **Delete Template** - Soft delete templates (role-based access)
+- Shows creator email for each template
+- Responsive table layout
 
 ## 🔒 Security Features
 
@@ -541,39 +596,18 @@ npm run test
 
 ### Template API Testing
 
-#### Using HTML Test Page
+You can test the Template APIs using:
 
-1. **Start Backend Server:**
+- **Postman** or **Thunder Client** - Import the endpoints and test with JWT tokens
+- **Browser Console** - Use fetch API with JWT token from login
+- **Frontend UI** - Use the Templates pages in the React application
 
-   ```bash
-   cd backend
-   npm run start:dev
-   ```
+**Testing Flow:**
 
-2. **Open Test Page:**
-
-   - Open `backend/template-api-test.html` in Chrome browser
-   - Test all Template APIs with JWT Authentication
-
-3. **Test Page Features:**
-   - Login/Signup functionality
-   - Create Template API testing
-   - List Templates API testing
-   - Update Template API testing
-   - Soft Delete API testing
-
-#### Using Browser Console
-
-```javascript
-// Complete test flow in browser console
-// 1. Login to get JWT token
-// 2. Test all CRUD operations
-// 3. All queries filter by tenant_id
-```
-
-**Test File Location:** `backend/template-api-test.html`
-
-**API Documentation:** See `backend/API_ENDPOINTS.md` for complete API testing guide
+1. Login/Signup to get JWT token
+2. Use token in Authorization header: `Bearer <token>`
+3. Test all CRUD operations
+4. All queries filter by `tenant_id` and user role automatically
 
 ## 📝 Available Scripts
 
@@ -683,25 +717,37 @@ Drizmo Development Team
 ### Template Management System
 
 - ✅ **Complete CRUD Operations** - Create, Read, Update, and Soft Delete templates
+- ✅ **Role-Based Access Control** - Different permissions for Admin and Regular users:
+  - **Admin**: Can view/edit/delete all templates from their tenant
+  - **Regular Users**: Can only view/edit/delete their own templates
+- ✅ **User Tracking** - Each template tracks the creator user (`userId` field)
+- ✅ **Creator Display** - Templates list shows creator email for admin users
 - ✅ **Multi-Tenant Support** - All operations automatically filter by `tenant_id`
+- ✅ **User Isolation** - Regular users can only access their own templates
 - ✅ **Tenant Isolation** - Complete data separation between tenants
 - ✅ **Soft Delete** - Templates are soft-deleted (not permanently removed)
 - ✅ **JWT Authentication** - All endpoints require valid JWT token
-- ✅ **API Testing Tools** - HTML test page for easy API testing
-- ✅ **Comprehensive Documentation** - Complete API endpoints guide
+- ✅ **Frontend UI** - Complete React UI for template management
 
-### Files Added
+### Frontend Pages Added
 
-- `backend/src/templates/` - Complete templates module
-- `backend/template-api-test.html` - Interactive API testing page
-- `backend/API_ENDPOINTS.md` - Complete API documentation
-- `backend/TESTING_GUIDE.md` - Testing guide and troubleshooting
+- `frontend/src/pages/TemplatesList.tsx` - Templates list with role-based filtering
+- `frontend/src/pages/AddTemplate.tsx` - Add new template form
+- `frontend/src/pages/EditTemplate.tsx` - Edit template form
+- `frontend/src/services/templateService.ts` - Template API service
+
+### Backend Files Added
+
+- `backend/src/templates/` - Complete templates module with role-based access
 
 ### Database Changes
 
 - Added `Template` model to Prisma schema
-- Migration: `20251129071858_add_template_module`
+- Migration: `20251129071858_add_template_module` - Initial template module
+- Migration: `20251130180658_add_user_id_to_templates` - Added `user_id` field
+- Added `user_id` column to track template creator
 - Added `deleted_at` column for soft delete functionality
+- Added User-Template relation for creator tracking
 
 ---
 

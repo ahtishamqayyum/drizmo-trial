@@ -6,6 +6,9 @@ import {
 } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import TemplatesList from "./pages/TemplatesList";
+import AddTemplate from "./pages/AddTemplate";
+import EditTemplate from "./pages/EditTemplate";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -46,6 +49,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/templates"
+            element={
+              <ProtectedRoute>
+                <TemplatesList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/templates/add"
+            element={
+              <ProtectedRoute>
+                <AddTemplate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/templates/edit/:id"
+            element={
+              <ProtectedRoute>
+                <EditTemplate />
               </ProtectedRoute>
             }
           />
