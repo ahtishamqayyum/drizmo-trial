@@ -18,12 +18,9 @@ export class UsersService {
         },
       });
     } catch (error) {
-      console.error("User creation error:", error);
-      // Handle Prisma unique constraint violation (duplicate email)
       if (error.code === "P2002") {
         throw new Error("User with this email already exists");
       }
-      // Handle foreign key constraint violation (invalid tenant ID)
       if (error.code === "P2003") {
         throw new Error("Invalid tenant ID. Tenant does not exist.");
       }
@@ -76,21 +73,13 @@ export class UsersService {
     currentUserId: string,
     currentUserRole: string
   ) {
-    console.log("🔍 UsersService.findAll - Filtering by tenantId:", tenantId);
-    console.log("🔍 Current user ID:", currentUserId);
-    console.log("🔍 Current user role:", currentUserRole);
-
-    // Verify tenantId is not empty
     if (!tenantId || tenantId.trim() === "") {
-      console.error("❌ Invalid tenantId provided:", tenantId);
       return [];
     }
 
     let users;
 
     if (currentUserRole === "admin") {
-      // Admin can see all users in their tenant
-      console.log("👑 Admin user - returning all users for tenant:", tenantId);
       users = await this.prisma.user.findMany({
         where: { tenantId },
         select: {
@@ -102,8 +91,6 @@ export class UsersService {
         orderBy: { createdAt: "desc" },
       });
     } else {
-      // Normal users can only see themselves
-      console.log("👤 Normal user - returning only own data");
       const user = await this.prisma.user.findFirst({
         where: { id: currentUserId, tenantId },
         select: {
@@ -116,12 +103,6 @@ export class UsersService {
       users = user ? [user] : [];
     }
 
-    console.log(
-      `✅ Found ${users.length} users for tenant ${tenantId}:`,
-      users.map((u) => u.email)
-    );
-
-    // Add name field extracted from email (before @) for display
     return users.map((user) => ({
       ...user,
       name:

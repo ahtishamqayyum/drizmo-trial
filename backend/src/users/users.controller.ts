@@ -19,35 +19,14 @@ export class UsersController {
 
   @Get()
   async findAll(@TenantId() tenantId: string, @Request() req) {
-    console.log("🔍 UsersController.findAll - Request received");
-    console.log("🔍 Tenant ID from decorator:", tenantId);
-    console.log("🔍 Request user:", req.user);
-    console.log("🔍 Request tenantId:", req.tenantId);
-
     if (!tenantId) {
-      console.error("❌ Tenant ID is missing!");
       throw new UnauthorizedException("Tenant ID is required");
     }
 
     const currentUserId = req.user?.id;
     const currentUserRole = req.user?.role || "user";
 
-    console.log(
-      "✅ UsersController.findAll - Tenant ID:",
-      tenantId,
-      "User:",
-      req.user?.email,
-      "Role:",
-      currentUserRole
-    );
-    const users = await this.usersService.findAll(
-      tenantId,
-      currentUserId,
-      currentUserRole
-    );
-    console.log(`✅ Found ${users.length} users for tenant ${tenantId}`);
-    console.log("✅ Users data:", users);
-    return users;
+    return this.usersService.findAll(tenantId, currentUserId, currentUserRole);
   }
 
   @Get(":id")

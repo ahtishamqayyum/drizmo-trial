@@ -35,6 +35,23 @@
   font-weight: 500;
 }
 
+.templates-link-button {
+  padding: 0.5rem 1.25rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.templates-link-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
 .logout-button {
   padding: 0.5rem 1.25rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

@@ -27,65 +27,51 @@ export class TemplatesController {
     @TenantId() tenantId: string,
     @Request() req,
   ) {
-    console.log('🔍 TemplatesController.create - Request received');
-    console.log('🔍 Request user:', req.user);
-    console.log('🔍 Tenant ID from decorator:', tenantId);
-    console.log('🔍 Request tenantId:', req.tenantId);
-
-    // Fallback: Try to get tenantId from request if decorator didn't work
     const finalTenantId = tenantId || req.tenantId || req.user?.tenantId;
+    const userId = req.user?.id;
 
     if (!finalTenantId) {
-      console.error('❌ Tenant ID is missing!');
-      console.error('Request object:', {
-        user: req.user,
-        tenantId: req.tenantId,
-        headers: req.headers,
-      });
       throw new UnauthorizedException('Tenant ID is required. Please login again.');
     }
 
-    console.log(
-      '✅ TemplatesController.create - Creating template for tenant:',
-      finalTenantId,
-    );
-    return this.templatesService.create(createTemplateDto, finalTenantId);
+    if (!userId) {
+      throw new UnauthorizedException('User ID is required. Please login again.');
+    }
+
+    return this.templatesService.create(createTemplateDto, finalTenantId, userId);
   }
 
   @Get()
   async findAll(@TenantId() tenantId: string, @Request() req) {
-    console.log('🔍 TemplatesController.findAll - Request received');
-    console.log('🔍 Request user:', req.user);
-    console.log('🔍 Tenant ID from decorator:', tenantId);
-    console.log('🔍 Request tenantId:', req.tenantId);
-
-    // Fallback: Try to get tenantId from request if decorator didn't work
     const finalTenantId = tenantId || req.tenantId || req.user?.tenantId;
+    const userRole = req.user?.role || 'user';
+    const userId = req.user?.id;
 
     if (!finalTenantId) {
-      console.error('❌ Tenant ID is missing!');
-      console.error('Request object:', {
-        user: req.user,
-        tenantId: req.tenantId,
-        headers: req.headers,
-      });
       throw new UnauthorizedException('Tenant ID is required. Please login again.');
     }
 
-    console.log(
-      '✅ TemplatesController.findAll - Fetching templates for tenant:',
-      finalTenantId,
-    );
-    return this.templatesService.findAll(finalTenantId);
+    if (!userId) {
+      throw new UnauthorizedException('User ID is required. Please login again.');
+    }
+
+    return this.templatesService.findAll(finalTenantId, userRole, userId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @TenantId() tenantId: string) {
+  async findOne(@Param('id') id: string, @TenantId() tenantId: string, @Request() req) {
     if (!tenantId) {
       throw new UnauthorizedException('Tenant ID is required');
     }
 
-    return this.templatesService.findOne(id, tenantId);
+    const userRole = req.user?.role || 'user';
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('User ID is required');
+    }
+
+    return this.templatesService.findOne(id, tenantId, userRole, userId);
   }
 
   @Patch(':id')
@@ -93,28 +79,35 @@ export class TemplatesController {
     @Param('id') id: string,
     @Body() updateTemplateDto: UpdateTemplateDto,
     @TenantId() tenantId: string,
+    @Request() req,
   ) {
     if (!tenantId) {
       throw new UnauthorizedException('Tenant ID is required');
     }
 
-    console.log(
-      `✅ TemplatesController.update - Updating template ${id} for tenant:`,
-      tenantId,
-    );
-    return this.templatesService.update(id, updateTemplateDto, tenantId);
+    const userRole = req.user?.role || 'user';
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('User ID is required');
+    }
+
+    return this.templatesService.update(id, updateTemplateDto, tenantId, userRole, userId);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @TenantId() tenantId: string) {
+  async remove(@Param('id') id: string, @TenantId() tenantId: string, @Request() req) {
     if (!tenantId) {
       throw new UnauthorizedException('Tenant ID is required');
     }
 
-    console.log(
-      `✅ TemplatesController.remove - Soft deleting template ${id} for tenant:`,
-      tenantId,
-    );
-    return this.templatesService.remove(id, tenantId);
+    const userRole = req.user?.role || 'user';
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('User ID is required');
+    }
+
+    return this.templatesService.remove(id, tenantId, userRole, userId);
   }
 }

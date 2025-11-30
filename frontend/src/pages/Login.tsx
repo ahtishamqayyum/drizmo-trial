@@ -54,15 +54,10 @@ const Login = () => {
       if (tenantsData && Array.isArray(tenantsData) && tenantsData.length > 0) {
         setTenants(tenantsData);
       } else {
-        // Use default tenants if API fails or returns empty
-        console.warn("No tenants from API, using default options");
         setTenants(defaultTenants);
       }
     } catch (err: any) {
-      console.error("Failed to load tenants from API, using defaults:", err);
-      // Use default tenants as fallback
       setTenants(defaultTenants);
-      // Don't show error - just use defaults
     } finally {
       setLoadingTenants(false);
     }
@@ -189,7 +184,6 @@ const Login = () => {
       setError(errorMessage);
       setSuccess("");
       setLoading(false);
-      console.error("Auth Error:", err);
     }
   };
 
@@ -215,34 +209,12 @@ const Login = () => {
 
           {error && (
             <div className="error-message">
-              <svg
-                className="error-icon"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
               {error}
             </div>
           )}
 
           {success && (
             <div className="success-message">
-              <svg
-                className="success-icon"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
               {success}
             </div>
           )}
@@ -254,14 +226,6 @@ const Login = () => {
                 <span className="required-star">*</span>
               </label>
               <div className="input-wrapper">
-                <svg
-                  className="input-icon"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
                 <input
                   id="email"
                   type="email"
@@ -287,15 +251,6 @@ const Login = () => {
                     tenantError ? "select-error" : ""
                   } ${loadingTenants ? "select-loading" : ""}`}
                 >
-                  <div className="tenant-select-icon">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                      <path
-                        fillRule="evenodd"
-                        d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
                   <select
                     id="tenantId"
                     value={tenantId}
@@ -314,15 +269,6 @@ const Login = () => {
                       )
                     )}
                   </select>
-                  <div className="tenant-select-arrow">
-                    <svg viewBox="0 0 20 20" fill="currentColor">
-                      <path
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
                   {loadingTenants && (
                     <div className="tenant-loading-spinner">
                       <div className="spinner-small"></div>
@@ -331,17 +277,6 @@ const Login = () => {
                 </div>
                 {loadingTenants && (
                   <span className="field-info">
-                    <svg
-                      className="info-icon"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
                     Loading available tenants...
                   </span>
                 )}
@@ -370,17 +305,6 @@ const Login = () => {
                 )}
               </div>
               <div className="input-wrapper">
-                <svg
-                  className="input-icon"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
                 <input
                   id="password"
                   type="password"
