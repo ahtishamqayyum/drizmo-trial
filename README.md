@@ -105,13 +105,35 @@ npm install
 
 ### 3. Database Setup
 
-#### Create PostgreSQL Database
+#### Option 1: Automated Setup (Recommended for Windows)
+
+Run the automated setup script that will configure everything:
+
+```powershell
+cd backend
+.\setup.ps1
+```
+
+This script will:
+- ✅ Create `.env` file from template
+- ✅ Prompt for PostgreSQL password
+- ✅ Install dependencies
+- ✅ Create database if needed
+- ✅ Generate Prisma Client
+- ✅ Run migrations
+- ✅ Seed the database
+
+**Note**: Make sure PostgreSQL is installed and running before running the setup script.
+
+#### Option 2: Manual Setup
+
+##### Create PostgreSQL Database
 
 ```sql
 CREATE DATABASE drizmo_db;
 ```
 
-#### Configure Backend Environment
+##### Configure Backend Environment
 
 Create a `.env` file in the `backend` directory:
 
@@ -124,7 +146,7 @@ PORT=3001
 
 **Important**: Replace `your_password` with your actual PostgreSQL password.
 
-#### Run Database Migrations
+##### Run Database Migrations
 
 ```bash
 cd backend
@@ -132,7 +154,7 @@ npm run prisma:generate
 npm run prisma:migrate
 ```
 
-#### Seed Database (Optional)
+##### Seed Database (Optional)
 
 Seed the database with initial tenants:
 
@@ -146,6 +168,8 @@ This will create:
 - Tenant B
 
 **Note**: No dummy users are created. Users are created through the signup process.
+
+For detailed troubleshooting, see `backend/SETUP-GUIDE.md`
 
 ## 🚀 Running the Application
 
