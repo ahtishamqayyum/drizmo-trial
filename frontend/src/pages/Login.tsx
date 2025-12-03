@@ -17,6 +17,17 @@ const Login = () => {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loadingTenants, setLoadingTenants] = useState(false);
 
+  // Forgot password state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotResult, setForgotResult] = useState<{
+    success: boolean;
+    message: string;
+    tempPassword?: string;
+    emailSent?: boolean;
+  } | null>(null);
+
   // Hardcoded tenant options as fallback
   const defaultTenants: Tenant[] = [
     { id: "Tenant A", name: "Tenant A" },
@@ -187,6 +198,49 @@ const Login = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      setForgotResult({
+        success: false,
+        message: "Please enter your email address",
+      });
+      return;
+    }
+
+    setForgotLoading(true);
+    setForgotResult(null);
+
+    try {
+      const result = await authService.forgotPassword(forgotEmail);
+      setForgotResult({
+        success: true,
+        message: result.message,
+        tempPassword: result.tempPassword,
+        emailSent: result.emailSent,
+      });
+    } catch (err: any) {
+      let errorMessage = "Failed to reset password. Please try again.";
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      setForgotResult({
+        success: false,
+        message: errorMessage,
+      });
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const closeForgotPasswordModal = () => {
+    setShowForgotPassword(false);
+    setForgotEmail("");
+    setForgotResult(null);
+  };
+
   return (
     <div className="login-container">
       <div className="login-image-section">
@@ -297,7 +351,8 @@ const Login = () => {
                     type="button"
                     className="forgot-password-button"
                     onClick={() => {
-                      alert("Forgot password functionality coming soon!");
+                      setShowForgotPassword(true);
+                      setForgotEmail(email);
                     }}
                   >
                     Forgot Password?
@@ -381,6 +436,93 @@ const Login = () => {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="modal-overlay" onClick={closeForgotPasswordModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="modal-close"
+              onClick={closeForgotPasswordModal}
+            >
+              ×
+            </button>
+            <h3 className="modal-title">Reset Password</h3>
+            
+            {!forgotResult?.success ? (
+              <>
+                <p className="modal-subtitle">
+                  Enter your email address and we'll send you a temporary password.
+                </p>
+                <form onSubmit={handleForgotPassword} className="forgot-form">
+                  <div className="form-group">
+                    <label htmlFor="forgotEmail">Email Address</label>
+                    <input
+                      id="forgotEmail"
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="name@company.com"
+                      required
+                    />
+                  </div>
+                  
+                  {forgotResult && !forgotResult.success && (
+                    <div className="error-message">{forgotResult.message}</div>
+                  )}
+                  
+                  <button
+                    type="submit"
+                    className="submit-button"
+                    disabled={forgotLoading}
+                  >
+                    {forgotLoading ? (
+                      <span className="button-loading">
+                        <span className="spinner"></span>
+                        Sending...
+                      </span>
+                    ) : (
+                      "Send Reset Email"
+                    )}
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="forgot-success">
+                <div className="success-icon">✓</div>
+                <p className="success-message">{forgotResult.message}</p>
+                
+                {forgotResult.emailSent ? (
+                  <div className="email-sent-box">
+                    <div className="email-icon">📧</div>
+                    <p className="email-sent-text">
+                      We've sent a temporary password to <strong>{forgotEmail}</strong>
+                    </p>
+                    <p className="email-sent-note">
+                      Please check your inbox (and spam folder) for the email. Use the temporary password to login and change it immediately.
+                    </p>
+                  </div>
+                ) : forgotResult.tempPassword ? (
+                  <div className="temp-password-box">
+                    <p className="temp-password-label">Your new temporary password:</p>
+                    <code className="temp-password">{forgotResult.tempPassword}</code>
+                    <p className="temp-password-note">
+                      Please copy this password and use it to login. Change it immediately after logging in.
+                    </p>
+                  </div>
+                ) : null}
+                
+                <button
+                  className="submit-button"
+                  onClick={closeForgotPasswordModal}
+                >
+                  Back to Login
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

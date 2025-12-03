@@ -84,4 +84,18 @@ export const authService = {
       throw error;
     }
   },
+
+  async forgotPassword(email: string) {
+    try {
+      const response = await api.post("/forgot-password", { email });
+      return response.data;
+    } catch (error: any) {
+      if (error.code === "ERR_NETWORK" || !error.response) {
+        throw new Error(
+          "Cannot connect to server. Please make sure the backend is running on port 3001."
+        );
+      }
+      throw error;
+    }
+  },
 };

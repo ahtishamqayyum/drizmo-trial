@@ -110,4 +110,11 @@ export class UsersService {
         user.email.split("@")[0].slice(1),
     }));
   }
+
+  async updatePassword(userId: string, hashedPassword: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+  }
 }
