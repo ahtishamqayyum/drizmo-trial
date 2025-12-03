@@ -33,6 +33,19 @@ async function main() {
   // Create test users for Tenant A
   const hashedPasswordA = await bcrypt.hash("password123", 10);
   
+  // Main Admin for Tenant A
+  const adminTenantA = await prisma.user.upsert({
+    where: { email: "admin@tenanta.com" },
+    update: {},
+    create: {
+      email: "admin@tenanta.com",
+      password: hashedPasswordA,
+      tenantId: tenantA.id,
+      role: "admin",
+    },
+  });
+  console.log("✅ Created Admin for Tenant A:", adminTenantA.email);
+
   const userA1 = await prisma.user.upsert({
     where: { email: "adminA@test.com" },
     update: {},
@@ -56,6 +69,19 @@ async function main() {
     },
   });
   console.log("✅ Created Regular User for Tenant A:", userA2.email);
+
+  // Main Admin for Tenant B
+  const adminTenantB = await prisma.user.upsert({
+    where: { email: "admin@tenantb.com" },
+    update: {},
+    create: {
+      email: "admin@tenantb.com",
+      password: hashedPasswordA,
+      tenantId: tenantB.id,
+      role: "admin",
+    },
+  });
+  console.log("✅ Created Admin for Tenant B:", adminTenantB.email);
 
   // Create test users for Tenant B
   const userB1 = await prisma.user.upsert({
@@ -115,10 +141,12 @@ async function main() {
   console.log("📋 Test Users Created:");
   console.log("");
   console.log("   Tenant A:");
+  console.log("     Admin:  admin@tenanta.com / password123");
   console.log("     Admin:  adminA@test.com / password123");
   console.log("     User:   userA@test.com / password123");
   console.log("");
   console.log("   Tenant B:");
+  console.log("     Admin:  admin@tenantb.com / password123");
   console.log("     Admin:  adminB@test.com / password123");
   console.log("     User:   userB@test.com / password123");
   console.log("");
